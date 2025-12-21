@@ -16,8 +16,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 # -------------------------------
 st.set_page_config(page_title="Stock Price Prediction", layout="wide")
 
-st.title("📈 Stock Price Prediction (Linear Regression)")
-st.write("Predict next day's closing price using a simple ML model")
+st.title("📈 Stock Price Prediction")
+# st.write("Predict next day's closing price using a simple ML model")
 
 # Sidebar inputs
 st.sidebar.header("Settings")
