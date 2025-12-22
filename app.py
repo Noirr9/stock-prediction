@@ -44,7 +44,7 @@ run_button = st.sidebar.button("▶ Run Prediction")
 # -------------------------------
 if run_button:
     with st.spinner("Downloading and processing data..."):
-        # 1. Download data safely
+        # Download data safely
         try:
             df = yf.download(ticker, start=start_date, progress=False)
         except Exception as e:
@@ -89,6 +89,33 @@ if run_button:
         # 6. Evaluation
         mae = mean_absolute_error(y_test, y_pred)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+        # -------------------------------
+        # 7. One-week future prediction (recursive)
+        # -------------------------------
+        last_close = df["Close"].iloc[-1]
+        last_ma5 = df["Close"].iloc[-5:].mean()
+
+        future_predictions = []
+        future_dates = pd.date_range(
+            start=df.index[-1] + pd.Timedelta(days=1),
+            periods=7,
+            freq="B"  # business days only
+        )
+
+        for _ in range(7):
+            pred = model.predict([[last_close, last_ma5]])[0]
+            future_predictions.append(pred)
+
+            # update features for next day
+            last_close = pred
+            last_ma5 = (last_ma5 * 4 + pred) / 5
+
+        future_df = pd.DataFrame({
+            "Date": future_dates,
+            "Predicted Close": future_predictions
+        })
+
 
     # -------------------------------
     # Display results
@@ -135,4 +162,5 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
 
