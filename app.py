@@ -123,9 +123,9 @@ if run_button:
     # -------------------------------
     st.success("✅ Prediction completed successfully!")
 
-    col1, col2 = st.columns(2)
-    col1.metric("MAE", f"{mae:.2f}")
-    col2.metric("RMSE", f"{rmse:.2f}")
+    # col1, col2 = st.columns(2)
+    # col1.metric("MAE", f"{mae:.2f}")
+    # col2.metric("RMSE", f"{rmse:.2f}")
 
     # -------------------------------
     # Historical prediction plot
@@ -156,8 +156,8 @@ if run_button:
     # -------------------------------
     st.subheader("🔮 1-Week Future Price Prediction")
 
-    st.warning(
-        "⚠️ Forecasts are for educational purposes only and should not be used for trading."
+    # st.warning(
+    #     "⚠️ Forecasts are for educational purposes only."
     )
 
     st.dataframe(future_df, use_container_width=True)
@@ -191,4 +191,5 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
 
