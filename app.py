@@ -16,7 +16,7 @@ st.set_page_config(page_title="Stock Price Predictor", layout="wide")
 # -------------------------------
 # App title & description
 # -------------------------------
-st.title("📈 Beginner Stock Price Prediction")
+st.title("📈 Stock Price Prediction")
 # st.write("Predict **next day's closing price** using a simple Linear Regression model.")
 
 # Always show instruction (prevents blank screen)
@@ -135,3 +135,4 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
