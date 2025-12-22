@@ -1,7 +1,3 @@
-# app.py
-# Robust Streamlit web app for beginner-friendly stock price prediction
-# FIXED to prevent blank screen after sleep / inactivity
-# Run with: streamlit run app.py
 
 import yfinance as yf
 import pandas as pd
@@ -13,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 # -------------------------------
-# Page config (MUST be first)
+# Page config
 # -------------------------------
 st.set_page_config(page_title="Stock Price Predictor", layout="wide")
 
@@ -21,7 +17,7 @@ st.set_page_config(page_title="Stock Price Predictor", layout="wide")
 # App title & description
 # -------------------------------
 st.title("📈 Beginner Stock Price Prediction")
-st.write("Predict **next day's closing price** using a simple Linear Regression model.")
+# st.write("Predict **next day's closing price** using a simple Linear Regression model.")
 
 # Always show instruction (prevents blank screen)
 st.info("👈 Enter a stock ticker and click **Run Prediction** to start")
@@ -38,7 +34,7 @@ ticker = st.sidebar.text_input(
 
 start_date = st.sidebar.date_input(
     "Start Date",
-    pd.to_datetime("2018-01-01")
+    pd.to_datetime("01-01-2022")
 )
 
 run_button = st.sidebar.button("▶ Run Prediction")
@@ -61,7 +57,7 @@ if run_button:
 
         df = df[["Close"]].dropna()
 
-        # 2. Feature engineering
+       
         df["Close_lag_1"] = df["Close"].shift(1)
         df["MA_5"] = df["Close"].rolling(5).mean()
         df["Target"] = df["Close"].shift(-1)
@@ -99,9 +95,9 @@ if run_button:
     # -------------------------------
     st.success("✅ Prediction completed successfully!")
 
-    col1, col2 = st.columns(2)
-    col1.metric("MAE", f"{mae:.2f}")
-    col2.metric("RMSE", f"{rmse:.2f}")
+    # col1, col2 = st.columns(2)
+    # col1.metric("MAE", f"{mae:.2f}")
+    # col2.metric("RMSE", f"{rmse:.2f}")
 
     # -------------------------------
     # Plot
