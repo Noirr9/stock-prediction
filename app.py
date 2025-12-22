@@ -1,120 +1,141 @@
-# Beginner-friendly stock price prediction
-# Predict next day's Close price using Linear Regression
+# app.py
+# Robust Streamlit web app for beginner-friendly stock price prediction
+# FIXED to prevent blank screen after sleep / inactivity
+# Run with: streamlit run app.py
 
-# Requirements:
-# pip install yfinance pandas numpy scikit-learn matplotlib
-
-import os
 import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import streamlit as st
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+# -------------------------------
+# Page config (MUST be first)
+# -------------------------------
+st.set_page_config(page_title="Stock Price Predictor", layout="wide")
 
 # -------------------------------
-# 1. Download stock data
+# App title & description
 # -------------------------------
-ticker = "NVDA"
-start_date = "2018-01-01"
-end_date = None   # None = today
+st.title("📈 Beginner Stock Price Prediction")
+st.write("Predict **next day's closing price** using a simple Linear Regression model.")
 
-print("Downloading data...")
-df = yf.download(ticker, start=start_date, end=end_date)
-
-df = df[["Close"]]
-df.dropna(inplace=True)
-
+# Always show instruction (prevents blank screen)
+st.info("👈 Enter a stock ticker and click **Run Prediction** to start")
 
 # -------------------------------
-# 2. Create simple features
+# Sidebar inputs
 # -------------------------------
+st.sidebar.header("🔎 Stock Settings")
 
-# Yesterday's close
-df["Close_lag_1"] = df["Close"].shift(1)
+ticker = st.sidebar.text_input(
+    "Stock Ticker (e.g. AAPL, NVDA, TSLA)",
+    value="NVDA"
+).upper().strip()
 
-# 5-day moving average
-df["MA_5"] = df["Close"].rolling(5).mean()
+start_date = st.sidebar.date_input(
+    "Start Date",
+    pd.to_datetime("2018-01-01")
+)
 
-# Target: tomorrow's close
-df["Target"] = df["Close"].shift(-1)
-
-df.dropna(inplace=True)
-
-
-# -------------------------------
-# 3. Train / Test split
-# -------------------------------
-split_ratio = 0.8
-split_index = int(len(df) * split_ratio)
-
-train = df.iloc[:split_index]
-test = df.iloc[split_index:]
-
-X_train = train[["Close_lag_1", "MA_5"]]
-y_train = train["Target"]
-
-X_test = test[["Close_lag_1", "MA_5"]]
-y_test = test["Target"]
-
+run_button = st.sidebar.button("▶ Run Prediction")
 
 # -------------------------------
-# 4. Train model
+# Main logic (safe execution)
 # -------------------------------
-model = LinearRegression()
-model.fit(X_train, y_train)
+if run_button:
+    with st.spinner("Downloading and processing data..."):
+        # 1. Download data safely
+        try:
+            df = yf.download(ticker, start=start_date, progress=False)
+        except Exception as e:
+            st.error("❌ Error downloading stock data.")
+            st.stop()
 
+        if df is None or df.empty:
+            st.error("❌ No data found. Please check the ticker symbol or try again later.")
+            st.stop()
 
-# -------------------------------
-# 5. Make predictions
-# -------------------------------
-y_pred = model.predict(X_test)
+        df = df[["Close"]].dropna()
 
+        # 2. Feature engineering
+        df["Close_lag_1"] = df["Close"].shift(1)
+        df["MA_5"] = df["Close"].rolling(5).mean()
+        df["Target"] = df["Close"].shift(-1)
+        df.dropna(inplace=True)
 
-# -------------------------------
-# 6. Evaluate model
-# -------------------------------
-mae = mean_absolute_error(y_test, y_pred)
-rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        if len(df) < 50:
+            st.error("❌ Not enough data to train the model.")
+            st.stop()
 
-print("\nModel Performance:")
-print(f"MAE : {mae:.2f}")
-print(f"RMSE: {rmse:.2f}")
+        # 3. Train/Test split
+        split_ratio = 0.8
+        split_index = int(len(df) * split_ratio)
 
+        train = df.iloc[:split_index]
+        test = df.iloc[split_index:]
 
-# -------------------------------
-# 7. Save predictions to CSV
-# -------------------------------
-os.makedirs("outputs", exist_ok=True)
+        X_train = train[["Close_lag_1", "MA_5"]]
+        y_train = train["Target"]
+        X_test = test[["Close_lag_1", "MA_5"]]
+        y_test = test["Target"]
 
-pred_df = pd.DataFrame({
-    "Date": y_test.index,
-    "Actual_Close": y_test.values,
-    "Predicted_Close": y_pred
-})
+        # 4. Train model
+        model = LinearRegression()
+        model.fit(X_train, y_train)
 
-csv_path = f"outputs/predictions_{ticker}.csv"
-pred_df.to_csv(csv_path, index=False)
+        # 5. Predictions
+        y_pred = model.predict(X_test)
 
-print(f"\nPrediction CSV saved to: {csv_path}")
+        # 6. Evaluation
+        mae = mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
+    # -------------------------------
+    # Display results
+    # -------------------------------
+    st.success("✅ Prediction completed successfully!")
 
-# -------------------------------
-# 8. Plot & save graph
-# -------------------------------
-plt.figure(figsize=(10, 5))
-plt.plot(y_test.index, y_test.values, label="Actual Price")
-plt.plot(y_test.index, y_pred, label="Predicted Price")
-plt.title(f"{ticker} Stock Price Prediction (Beginner Model)")
-plt.xlabel("Date")
-plt.ylabel("Price")
-plt.legend()
-plt.tight_layout()
+    col1, col2 = st.columns(2)
+    col1.metric("MAE", f"{mae:.2f}")
+    col2.metric("RMSE", f"{rmse:.2f}")
 
-plot_path = f"outputs/prediction_plot_{ticker}.png"
-plt.savefig(plot_path)
-plt.show()
+    # -------------------------------
+    # Plot
+    # -------------------------------
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(y_test.index, y_test.values, label="Actual Price")
+    ax.plot(y_test.index, y_pred, label="Predicted Price")
+    ax.set_title(f"{ticker} Stock Price Prediction")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Price")
+    ax.legend()
 
-print(f"Prediction plot saved to: {plot_path}")
+    st.pyplot(fig)
+
+    # -------------------------------
+    # Results table
+    # -------------------------------
+    result_df = pd.DataFrame({
+        "Date": y_test.index,
+        "Actual Close": y_test.values,
+        "Predicted Close": y_pred
+    })
+
+    st.subheader("📊 Prediction Table (Last 20 Days)")
+    st.dataframe(result_df.tail(20), use_container_width=True)
+
+    # -------------------------------
+    # Download CSV
+    # -------------------------------
+    csv = result_df.to_csv(index=False).encode("utf-8")
+
+    st.download_button(
+        label="⬇️ Download Predictions CSV",
+        data=csv,
+        file_name=f"predictions_{ticker}.csv",
+        mime="text/csv"
+    )
