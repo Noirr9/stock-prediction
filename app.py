@@ -158,7 +158,7 @@ if run_button:
 
     # st.warning(
     #     "⚠️ Forecasts are for educational purposes only."
-    )
+    # )
 
     st.dataframe(future_df, use_container_width=True)
 
@@ -191,5 +191,6 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
 
 
