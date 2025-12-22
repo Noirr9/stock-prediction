@@ -101,10 +101,17 @@ if run_button:
         )
 
         for _ in range(7):
-            pred = model.predict([[last_close, last_ma5]])[0]
+            future_X = pd.DataFrame(
+                [[last_close, last_ma5]],
+                columns=["Close_lag_1", "MA_5"]
+            )
+        
+            pred = model.predict(future_X)[0]
             future_predictions.append(pred)
+        
             last_close = pred
             last_ma5 = (last_ma5 * 4 + pred) / 5
+    
 
         future_df = pd.DataFrame({
             "Date": future_dates,
@@ -184,3 +191,4 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
