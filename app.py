@@ -165,9 +165,3 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
-
-
-
-
-
-
