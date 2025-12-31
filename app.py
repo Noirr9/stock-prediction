@@ -7,20 +7,13 @@ import streamlit as st
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-# -------------------------------
-# Page config (MUST be first)
-# -------------------------------
+
 st.set_page_config(page_title="Stock Price Predictor", layout="wide")
 
-# -------------------------------
-# App title & description
-# -------------------------------
 st.title("📈 Stock Price Prediction")
 st.info("👈 Enter a stock ticker and click **Run Prediction** to start")
 
-# -------------------------------
 # Sidebar inputs
-# -------------------------------
 st.sidebar.header("🔎 Stock Settings")
 
 ticker = st.sidebar.text_input(
@@ -35,13 +28,11 @@ start_date = st.sidebar.date_input(
 
 run_button = st.sidebar.button("▶ Run Prediction")
 
-# -------------------------------
 # Main logic
-# -------------------------------
 if run_button:
     with st.spinner("Downloading and processing data..."):
 
-        # 1. Download data safely
+        # 1. Download data 
         try:
             df = yf.download(ticker, start=start_date, progress=False)
         except Exception:
@@ -54,7 +45,7 @@ if run_button:
 
         df = df[["Close"]].dropna()
 
-        # 2. Feature engineering
+        # 2. Feature 
         df["Close_lag_1"] = df["Close"].shift(1)
         df["MA_5"] = df["Close"].rolling(5).mean()
         df["Target"] = df["Close"].shift(-1)
@@ -64,7 +55,7 @@ if run_button:
             st.error("❌ Not enough data to train the model.")
             st.stop()
 
-        # 3. Train/Test split (time-series safe)
+        # 3. Train/Test split
         split_ratio = 0.8
         split_index = int(len(df) * split_ratio)
 
@@ -80,16 +71,14 @@ if run_button:
         model = LinearRegression()
         model.fit(X_train, y_train)
 
-        # 5. Predictions (historical)
+        # 5. Predictions
         y_pred = model.predict(X_test)
 
         # 6. Evaluation
         mae = mean_absolute_error(y_test, y_pred)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
-        # -------------------------------
         # 7. One-week future prediction
-        # -------------------------------
         last_close = df["Close"].iloc[-1]
         last_ma5 = df["Close"].iloc[-5:].mean()
 
@@ -97,7 +86,7 @@ if run_button:
         future_dates = pd.date_range(
             start=df.index[-1] + pd.Timedelta(days=1),
             periods=7,
-            freq="B"  # business days only
+            freq="B"  # business days
         )
 
         for _ in range(7):
@@ -118,18 +107,15 @@ if run_button:
             "Predicted Close": future_predictions
         })
 
-    # -------------------------------
     # Display results
-    # -------------------------------
     st.success("✅ Prediction completed successfully!")
 
     # col1, col2 = st.columns(2)
     # col1.metric("MAE", f"{mae:.2f}")
     # col2.metric("RMSE", f"{rmse:.2f}")
 
-    # -------------------------------
+
     # Historical prediction plot
-    # -------------------------------
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(y_test.index, y_test.values, label="Actual Price")
     ax.plot(y_test.index, y_pred, label="Predicted Price")
@@ -139,9 +125,8 @@ if run_button:
     ax.legend()
     st.pyplot(fig)
 
-    # -------------------------------
+
     # Historical results table
-    # -------------------------------
     result_df = pd.DataFrame({
         "Date": y_test.index,
         "Actual Close": y_test.values,
@@ -151,20 +136,11 @@ if run_button:
     st.subheader("📊 Historical Prediction (Last 20 Days)")
     st.dataframe(result_df.tail(20), use_container_width=True)
 
-    # -------------------------------
     # Future prediction section
-    # -------------------------------
     st.subheader("🔮 1-Week Future Price Prediction")
-
-    # st.warning(
-    #     "⚠️ Forecasts are for educational purposes only."
-    # )
-
     st.dataframe(future_df, use_container_width=True)
 
-    # -------------------------------
     # Future prediction plot
-    # -------------------------------
     fig2, ax2 = plt.subplots(figsize=(10, 5))
     ax2.plot(df.index[-60:], df["Close"].iloc[-60:], label="Recent Actual Price")
     ax2.plot(
@@ -179,10 +155,8 @@ if run_button:
     ax2.set_ylabel("Price")
     ax2.legend()
     st.pyplot(fig2)
-
-    # -------------------------------
+S
     # Download CSV (historical)
-    # -------------------------------
     csv = result_df.to_csv(index=False).encode("utf-8")
 
     st.download_button(
@@ -191,6 +165,7 @@ if run_button:
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
 
 
 
