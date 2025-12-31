@@ -155,7 +155,7 @@ if run_button:
     ax2.set_ylabel("Price")
     ax2.legend()
     st.pyplot(fig2)
-S
+    
     # Download CSV (historical)
     csv = result_df.to_csv(index=False).encode("utf-8")
 
@@ -165,6 +165,7 @@ S
         file_name=f"predictions_{ticker}.csv",
         mime="text/csv"
     )
+
 
 
 
